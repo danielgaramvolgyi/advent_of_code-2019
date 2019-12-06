@@ -63,29 +63,29 @@ def day2_part2(inputFileName):
 
     with open(inputFileName, 'r') as fileStream:
         startingOpcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
-        for noun in range(100):
-            for verb in range(100):
-                opcodes = list(startingOpcodes)  # copy original list
+    for noun in range(100):
+        for verb in range(100):
+            opcodes = list(startingOpcodes)  # copy original list
 
-                opcodes[1] = noun
-                opcodes[2] = verb
-                currentPosition = 0
-                while True:
-                    if opcodes[currentPosition] == OPCODE_ADD:
-                        opcodes[opcodes[currentPosition + 3]] = opcodes[opcodes[currentPosition + 1]] + opcodes[
-                            opcodes[currentPosition + 2]]
-                    elif opcodes[currentPosition] == OPCODE_MULT:
-                        opcodes[opcodes[currentPosition + 3]] = opcodes[opcodes[currentPosition + 1]] * opcodes[
-                            opcodes[currentPosition + 2]]
-                    elif opcodes[currentPosition] == OPCODE_HALT:
-                        break
-                    else:
-                        raise Exception
+            opcodes[1] = noun
+            opcodes[2] = verb
+            currentPosition = 0
+            while True:
+                if opcodes[currentPosition] == OPCODE_ADD:
+                    opcodes[opcodes[currentPosition + 3]] = opcodes[opcodes[currentPosition + 1]] + opcodes[
+                        opcodes[currentPosition + 2]]
+                elif opcodes[currentPosition] == OPCODE_MULT:
+                    opcodes[opcodes[currentPosition + 3]] = opcodes[opcodes[currentPosition + 1]] * opcodes[
+                        opcodes[currentPosition + 2]]
+                elif opcodes[currentPosition] == OPCODE_HALT:
+                    break
+                else:
+                    raise Exception
 
-                    currentPosition += STEPFORWARD
+                currentPosition += STEPFORWARD
 
-                if opcodes[0] == PUZZLE_INPUT:
-                    return 100 * noun + verb
+            if opcodes[0] == PUZZLE_INPUT:
+                return 100 * noun + verb
 
 
 # DAY 3 #
@@ -177,7 +177,7 @@ def day4_part2():
     RANGE_LOWER = 172930
     RANGE_UPPER = 683082
     total = 0
-    for i in range(172930, 683082):
+    for i in range(RANGE_LOWER, RANGE_UPPER):
         numlist = [int(d) for d in str(i)]
         if numlist == sorted(numlist):
             frequencyDict = collections.defaultdict(int)
@@ -283,12 +283,16 @@ def run_program(opcodes, inputCode):
         elif opcode == Opcodes.LESS_THAN:
             opcodes[writeParam] = int(firstParam < secondParam)
             instructionPointer += numberOfParams + 1
-
         elif opcode == Opcodes.EQUALS:
+
             opcodes[writeParam] = int(firstParam == secondParam)
             instructionPointer += numberOfParams + 1
-        else:
+
+        elif opcode == Opcodes.HALT:
             break
+
+        else:
+            raise Exception
 
 
 def day5_part1(inputFileName):
