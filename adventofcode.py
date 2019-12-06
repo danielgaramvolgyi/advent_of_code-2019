@@ -1,8 +1,9 @@
 import collections
 from enum import Enum
+from typing import List
+
 
 # DAY 1 #
-from typing import List
 
 
 def day1_part1(inputFileName):
@@ -368,6 +369,9 @@ def day6_part2(inputFileName):
     you_path = set(path_to_root('YOU', 'COM', orbitTree))
 
     return len(san_path ^ you_path)  # symmetric difference
+
+
+# MAIN #
 
 
 if __name__ == '__main__':
