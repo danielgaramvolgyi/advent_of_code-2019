@@ -1,6 +1,7 @@
 import collections
 from enum import Enum
 from typing import List
+from itertools import permutations
 
 
 # DAY 1 #
@@ -28,7 +29,7 @@ def day2_part1(inputFileName):
     OPCODE_ADD = 1
     OPCODE_MULT = 2
     OPCODE_HALT = 99
-    STEPFORWARD = 4
+    STEP_FORWARD = 4
 
     with open(inputFileName, 'r') as fileStream:
         opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
@@ -48,7 +49,7 @@ def day2_part1(inputFileName):
             else:
                 raise Exception
 
-            currentPosition += STEPFORWARD
+            currentPosition += STEP_FORWARD
 
         return opcodes[0]
 
@@ -57,7 +58,7 @@ def day2_part2(inputFileName):
     OPCODE_ADD = 1
     OPCODE_MULT = 2
     OPCODE_HALT = 99
-    STEPFORWARD = 4
+    STEP_FORWARD = 4
 
     PUZZLE_INPUT = 19690720
 
@@ -82,7 +83,7 @@ def day2_part2(inputFileName):
                 else:
                     raise Exception
 
-                currentPosition += STEPFORWARD
+                currentPosition += STEP_FORWARD
 
             if opcodes[0] == PUZZLE_INPUT:
                 return 100 * noun + verb
@@ -236,8 +237,10 @@ def parse_parameter(opcodes, parameterMode, parameter):
         return opcodes[parameter]
 
 
-def run_program(opcodes, inputCode):
-    instructionPointer = 0
+def run_program(opcodes, inputCodes, startingInstructionPointer = 0):
+    instructionPointer = startingInstructionPointer
+    outputs = []
+    hasFinished = False
 
     while True:
         opcode, parameterModes = parse_opcode(opcodes[instructionPointer])
@@ -261,11 +264,14 @@ def run_program(opcodes, inputCode):
             instructionPointer += numberOfParams + 1
 
         elif opcode == Opcodes.INPUT:
-            opcodes[writeParam] = inputCode
-            instructionPointer += numberOfParams + 1
+            if len(inputCodes) == 0:
+                return outputs, hasFinished, instructionPointer
+            else:
+                opcodes[writeParam] = inputCodes.pop(0)
+                instructionPointer += numberOfParams + 1
 
         elif opcode == Opcodes.OUTPUT:
-            print(firstParam)
+            outputs.append(firstParam)
             instructionPointer += numberOfParams + 1
 
         elif opcode == Opcodes.JUMP_IF_TRUE:
@@ -289,7 +295,8 @@ def run_program(opcodes, inputCode):
             instructionPointer += numberOfParams + 1
 
         elif opcode == Opcodes.HALT:
-            break
+            hasFinished = True
+            return outputs, hasFinished, instructionPointer
 
         else:
             raise Exception
@@ -298,15 +305,18 @@ def run_program(opcodes, inputCode):
 def day5_part1(inputFileName):
     with open(inputFileName, 'r') as fileStream:
         opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
-    INPUT_CODE = 1
-    run_program(opcodes, INPUT_CODE)
+    INPUT_CODE = [1]
+    outputs, _, _ = run_program(opcodes, INPUT_CODE)
+    return(outputs)
 
 
 def day5_part2(inputFileName):
     with open(inputFileName, 'r') as fileStream:
         opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
-    INPUT_CODE = 5
-    run_program(opcodes, INPUT_CODE)
+    INPUT_CODE = [5]
+
+    outputs, _, _ = run_program(opcodes, INPUT_CODE)
+    return(outputs)
 
 
 # DAY 6 #
@@ -375,8 +385,55 @@ def day6_part2(inputFileName):
     return len(san_path ^ you_path)  # symmetric difference
 
 
+# DAY 7 #
+
+
+def run_amplifiers(opcodes, phase_settings):
+    amplifiers = [list(opcodes) for _ in range(5)]
+    outputs = [0]
+    for i in range(5):
+        outputs.extend(run_program(opcodes, [phase_settings[i], outputs[i]])[0])
+    return outputs[5]
+
+
+def day7_part1(inputFileName):
+    with open(inputFileName, 'r') as fileStream:
+        opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
+    perm = list(permutations(range(5)))
+
+    return max(run_amplifiers(opcodes, p) for p in perm)
+
+
+def run_amplifiers_feedback_mode(opcodes, phase_settings):
+    amplifiers = [list(opcodes) for _ in range(5)]
+    instructionPointers = [0 for _ in range(5)]     # keeps track of the current position in each amplifier's program
+    inputs = [[i] for i in phase_settings]
+    inputs[0].append(0)     # starting signal for amplifier A
+    currentAmplifier = 0
+
+    while True:
+        outputs, hasFinished, instructionPointer = run_program(amplifiers[currentAmplifier],
+                                                               inputs[currentAmplifier],
+                                                               instructionPointers[currentAmplifier])
+        instructionPointers[currentAmplifier] = instructionPointer
+        if currentAmplifier == 4 and hasFinished:
+            return outputs[0]
+
+        currentAmplifier += 1
+        currentAmplifier %= 5
+        inputs[currentAmplifier].extend(outputs)
+
+
+def day7_part2(inputFileName):
+    with open(inputFileName, 'r') as fileStream:
+        opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
+    perm = list(permutations(range(5,10)))
+
+    return max(run_amplifiers_feedback_mode(opcodes, p) for p in perm)
+
+
 # MAIN #
 
 
 if __name__ == '__main__':
-    print(day6_part2("input.txt"))
+    print(day7_part2("input.txt"))
