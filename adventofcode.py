@@ -237,10 +237,9 @@ def parse_parameter(opcodes, parameterMode, parameter):
         return opcodes[parameter]
 
 
-def run_program(opcodes, inputCodes, startingInstructionPointer = 0):
+def run_program(opcodes, inputCodes, startingInstructionPointer=0):
     instructionPointer = startingInstructionPointer
     outputs = []
-    hasFinished = False
 
     while True:
         opcode, parameterModes = parse_opcode(opcodes[instructionPointer])
@@ -265,7 +264,8 @@ def run_program(opcodes, inputCodes, startingInstructionPointer = 0):
 
         elif opcode == Opcodes.INPUT:
             if len(inputCodes) == 0:
-                return outputs, hasFinished, instructionPointer
+                hasFinished = False
+                return outputs, hasFinished, instructionPointer  # additional input needed, stopping program
             else:
                 opcodes[writeParam] = inputCodes.pop(0)
                 instructionPointer += numberOfParams + 1
@@ -399,9 +399,9 @@ def run_amplifiers(opcodes, phase_settings):
 def day7_part1(inputFileName):
     with open(inputFileName, 'r') as fileStream:
         opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
-    perm = list(permutations(range(5)))
+    perms = list(permutations(range(5)))
 
-    return max(run_amplifiers(opcodes, p) for p in perm)
+    return max(run_amplifiers(opcodes, p) for p in perms)
 
 
 def run_amplifiers_feedback_mode(opcodes, phase_settings):
@@ -419,21 +419,55 @@ def run_amplifiers_feedback_mode(opcodes, phase_settings):
         if currentAmplifier == 4 and hasFinished:
             return outputs[0]
 
-        currentAmplifier += 1
-        currentAmplifier %= 5
-        inputs[currentAmplifier].extend(outputs)
+        nextAmplifier = (currentAmplifier + 1) % 5
+        inputs[nextAmplifier].extend(outputs)
+        currentAmplifier = nextAmplifier
 
 
 def day7_part2(inputFileName):
     with open(inputFileName, 'r') as fileStream:
         opcodes = [int(opcode) for opcode in fileStream.read().replace('\n', '').split(',')]
-    perm = list(permutations(range(5,10)))
+    perms = list(permutations(range(5, 10)))
 
-    return max(run_amplifiers_feedback_mode(opcodes, p) for p in perm)
+    return max(run_amplifiers_feedback_mode(opcodes, p) for p in perms)
+
+
+# DAY 8 #
+
+
+def day8_part1(inputFileName):
+    IMAGE_WIDTH = 25
+    IMAGE_HEIGHT = 6
+    IMAGE_SIZE = IMAGE_WIDTH * IMAGE_HEIGHT
+    with open(inputFileName, 'r') as fileStream:
+        pixelList = [int(i) for i in fileStream.read().replace('\n','')]
+
+    layers = [pixelList[i: i + IMAGE_SIZE] for i in range(0, len(pixelList), IMAGE_SIZE)]
+
+    minLayer = min(layers, key=lambda x: x.count(0))
+    return minLayer.count(1) * minLayer.count(2)
+
+
+def day8_part2(inputFileName):
+    IMAGE_WIDTH = 25
+    IMAGE_HEIGHT = 6
+    IMAGE_SIZE = IMAGE_WIDTH * IMAGE_HEIGHT
+    TRANSPARENT = 2
+
+    with open(inputFileName, 'r') as fileStream:
+        pixelList = [int(i) for i in fileStream.read().replace('\n','')]
+
+    flat_layers = [pixelList[i: i + IMAGE_SIZE] for i in range(0,len(pixelList), IMAGE_SIZE)]
+    collected_layers = [list(i) for i in zip(*flat_layers)]     # transpose of list of lists
+    flat_visible_layer = [[i for i in pixel if i != TRANSPARENT][0]
+                          for pixel in collected_layers]  # assumes that there is a non-transparent layer at each pixel
+
+    for i in range(0, len(flat_visible_layer), IMAGE_WIDTH):
+        print(flat_visible_layer[i: i + IMAGE_WIDTH])
 
 
 # MAIN #
 
 
 if __name__ == '__main__':
-    print(day7_part2("input.txt"))
+    print(day8_part2("input.txt"))
